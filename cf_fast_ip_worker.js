@@ -90,8 +90,15 @@ function getClash(ips){
   var proxies="proxies:\n"
   for(i=0;i<ips.length;i++){
     ip = JSON.parse(ips[i])
-    proxies += "  - {name: \""+ip.ip+"|"+ip.date+"|"+ip.speed+"\", server: "+ip.ip+
-      ", port: 443, type: vmess, uuid: "+uuid+", alterId: 8, cipher: auto, tls: true, network: ws, ws-path: "+path+", ws-headers: {Host: "+host+"}}\n"
+    if(ipVersion(ip.ip)=="ipv4"){
+      tempIp = ip.ip;
+    }else if(ipVersion(ip.ip)=="ipv6"){
+      tempIp = ip.ip.substr(0,findStrIndex(ip.ip,":",2));
+    }
+    proxies += "  - {name: \""+tempIp+"|"+ip.date+"|"+ip.speed+"\", server: "+ip.ip+
+      ", port: 443, type: vmess, uuid: "+uuid+
+      ", alterId: 8, cipher: auto, tls: true, network: ws, ws-opts: {path: "+path+
+      ", headers: {Host: vm-ag.gniq.pp.ua}}}\n"
   }
   return proxies
 }
@@ -127,6 +134,30 @@ function getdate(){
 }
 
 function isValidIP(ip) {
-    var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
-    return reg.test(ip);
+    return ipVersion(ip) != "error"
 } 
+
+function ipVersion(ip) {
+    var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
+    var regv6 = /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
+    if(reg.test(ip)){
+      return "ipv4";
+    }else if(regv6.test(ip)){
+      return "ipv6";
+    }else {
+      return "error";
+    }
+} 
+/**
+ * 查找字符串第几次出现的位置
+ * @param {Object} str 源字符串
+ * @param {Object} cha 要查询的字符或字符串
+ * @param {Object} num 第几次出现，第一次则为 0
+ */
+function findStrIndex(str, cha, num) {
+    let x = str.indexOf(cha);
+    for (let i = 0; i < num; i++) {
+        x = str.indexOf(cha, x + 1);
+    }
+    return x;
+}
